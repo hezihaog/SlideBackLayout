@@ -1,6 +1,10 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="MyTheme" parent="TranslucentTheme">
+    <style name="AppTheme">
+        <item name="android:windowAnimationStyle">@style/AnimationTheme</item>
+    </style>
+
+    <style name="MyTranslucentTheme" parent="TranslucentTheme">
         <item name="android:windowAnimationStyle">@style/AnimationTheme</item>
     </style>
 
