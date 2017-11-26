@@ -24,7 +24,6 @@ import android.widget.Scroller;
 public class SlideBackLayout extends FrameLayout {
     // 页面边缘阴影的宽度默认值
     private static final int SHADOW_WIDTH_DP = 16;//左边阴影的宽
-    private Activity mActivity;
     private Scroller mScroller;
     // 页面边缘的阴影图
     private Drawable mLeftShadow;
@@ -38,6 +37,7 @@ public class SlideBackLayout extends FrameLayout {
     private int mLastTouchX;
     private int mLastTouchY;
     private boolean isConsumed = false;
+    private OnSlideListener listener;
 
     public SlideBackLayout(Context context) {
         super(context);
@@ -58,19 +58,6 @@ public class SlideBackLayout extends FrameLayout {
         mScroller = new Scroller(context);
         mLeftShadow = getResources().getDrawable(R.drawable.left_shadow);
         mShadowWidth = (int) dpToPixel(context, SHADOW_WIDTH_DP);
-    }
-
-    /**
-     * 绑定Activity
-     */
-    public void bindActivity(Activity activity) {
-        this.mActivity = activity;
-        //包裹Activity的布局
-        ViewGroup decorView = (ViewGroup) mActivity.getWindow().getDecorView();
-        View child = decorView.getChildAt(0);
-        decorView.removeView(child);
-        addView(child);
-        decorView.addView(this);
     }
 
     @Override
@@ -209,8 +196,10 @@ public class SlideBackLayout extends FrameLayout {
             scrollTo(mScroller.getCurrX(), 0);
             postInvalidate();//重绘；调用这个：computeScroll()
         } else if (-getScrollX() >= getWidth()) {
-            //当滑动出去了，结束activity;
-            mActivity.finish();
+            //当滑动出去了，关闭界面
+            if (listener != null) {
+                listener.onSlideClose();
+            }
         }
     }
 
@@ -219,5 +208,49 @@ public class SlideBackLayout extends FrameLayout {
         super.dispatchDraw(canvas);
         //绘制阴影
         drawShadow(canvas);
+    }
+
+    /**
+     * 滑动监听
+     */
+    public interface OnSlideListener {
+        void onSlideClose();
+    }
+
+    public void setOnSlideListener(OnSlideListener listener) {
+        this.listener = listener;
+    }
+
+    /**
+     * 绑定
+     *
+     * @param parentView 视图的父ViewGroup
+     * @param target     视图View
+     * @param listener   回调监听
+     */
+    public void bind(ViewGroup parentView, View target, OnSlideListener listener) {
+        setOnSlideListener(listener);
+        parentView.removeView(target);
+        addView(target);
+        parentView.addView(this);
+    }
+
+    /**
+     * 快捷使用Activity绑定
+     *
+     * @param activity
+     */
+    public void bind(final Activity activity) {
+        if (activity == null) {
+            return;
+        }
+        ViewGroup decorView = (ViewGroup) activity.getWindow().getDecorView();
+        ViewGroup contentOverlay = (ViewGroup) decorView.getChildAt(0);
+        bind(decorView, contentOverlay, new SlideBackLayout.OnSlideListener() {
+            @Override
+            public void onSlideClose() {
+                activity.finish();
+            }
+        });
     }
 }

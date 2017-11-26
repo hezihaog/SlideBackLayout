@@ -1,8 +1,8 @@
 package com.hzh.slide.back.layout.sample.base;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 
 import com.hzh.slide.back.layout.SlideBackLayout;
 
@@ -15,13 +15,13 @@ import com.hzh.slide.back.layout.SlideBackLayout;
  * Email: hezihao@linghit.com
  */
 
-public class BackSlideBackActivity extends AppCompatActivity {
+public class BaseSlideBackActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (isSlideBackEnable()) {
             SlideBackLayout layout = new SlideBackLayout(this);
-            layout.bindActivity(this);
+            layout.bind(this);
         }
     }
 

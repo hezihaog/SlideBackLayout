@@ -1,29 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FF0000"
+    android:background="@color/white"
     android:orientation="vertical"
     tools:context='com.hzh.slide.back.layout.sample.MainActivity'>
 
-    <View
-        android:id="@+id/statusView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="@color/colorPrimaryDark" />
-
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolBar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
-
     <Button
-        android:id="@+id/goBtn"
-        android:layout_width="wrap_content"
+        android:id="@+id/extendUseBtn"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Go" />
+        android:text="使用继承BackSlideBackActivity" />
 </LinearLayout>
