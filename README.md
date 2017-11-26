@@ -9,12 +9,12 @@
 ```
 
 2. 使用方式
-  *  在activity的onCreate上调用
+  *  方式1：在activity的onCreate上调用
 ```java
 SlideBackLayout layout = new SlideBackLayout(this);
 layout.bind(this);
 ```
-  * 在布局中使用
+  * 方式2：在布局中使用，使用该方式，最好把actionBar隐藏，布局中使用ToolBar，因为设置了透明，动画失效，需要代码再次设置覆盖关闭动画。
   ```java
   //在布局的最外层使用SlideBackLayout，找到控件后调用setOnSlideListener()设置监听，在回调上做操作
   SlideBackLayout layout = findViewById(R.id.slideLayout);
