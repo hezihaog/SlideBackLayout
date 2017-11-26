@@ -1,0 +1,25 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="MyTheme" parent="TranslucentTheme">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="TranslucentTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@style/AnimationTheme</item>
+    </style>
+
+    <style name="AnimationTheme" parent="@android:style/Animation.Activity">
+        <!-- 打开下一个Activity，下一个Activity进入的动画   animation_scale_right_in-->
+        <item name="android:activityOpenEnterAnimation">@anim/animation_slide_right_in</item>
+        <!-- 打开下一个Activity，该Activity退出的动画 -->
+        <item name="android:activityOpenExitAnimation">@anim/animation_slide_left_out</item>
+        <!-- 关闭一个Activity，上一个Activity进入的动画 -->
+        <item name="android:activityCloseEnterAnimation">@anim/animation_slide_left_in</item>
+        <!-- 关闭一个Activity，该Activity退出的动画 -->
+        <item name="android:activityCloseExitAnimation">@anim/animation_slide_right_out</item>
+    </style>
+</resources>
