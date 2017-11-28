@@ -55,6 +55,8 @@ public class SlideBackLayout extends FrameLayout {
     }
 
     private void initView(Context context) {
+        //设置允许绘制自己，否则onDraw会跳过不调用
+        setWillNotDraw(false);
         mScroller = new Scroller(context);
         mLeftShadow = getResources().getDrawable(R.drawable.left_shadow);
         mShadowWidth = (int) dpToPixel(context, SHADOW_WIDTH_DP);
@@ -204,8 +206,8 @@ public class SlideBackLayout extends FrameLayout {
     }
 
     @Override
-    protected void dispatchDraw(Canvas canvas) {
-        super.dispatchDraw(canvas);
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
         //绘制阴影
         drawShadow(canvas);
     }
