@@ -3,13 +3,14 @@ package com.hzh.slide.back.layout;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.Scroller;
 
 /**
@@ -21,7 +22,7 @@ import android.widget.Scroller;
  * Email: hezihao@linghit.com
  */
 
-public class SlideBackLayout extends FrameLayout {
+public class SlideBackLayout extends LinearLayout {
     // 页面边缘阴影的宽度默认值
     private static final int SHADOW_WIDTH_DP = 16;//左边阴影的宽
     private Scroller mScroller;
@@ -38,6 +39,12 @@ public class SlideBackLayout extends FrameLayout {
     private int mLastTouchY;
     private boolean isConsumed = false;
     private OnSlideListener listener;
+    private View gradualView;
+    private View contentOverlay;
+    private int screenWidth;
+    private int screenHeight;
+    //Content视图距离屏幕左上角的距离
+    private int[] contentLocation = new int[2];
 
     public SlideBackLayout(Context context) {
         super(context);
@@ -60,6 +67,9 @@ public class SlideBackLayout extends FrameLayout {
         mScroller = new Scroller(context);
         mLeftShadow = getResources().getDrawable(R.drawable.left_shadow);
         mShadowWidth = (int) dpToPixel(context, SHADOW_WIDTH_DP);
+        //获取屏幕宽高
+        screenWidth = (int) getScreenWidth(getContext());
+        screenHeight = (int) getScreenHeight(getContext());
     }
 
     @Override
@@ -116,10 +126,14 @@ public class SlideBackLayout extends FrameLayout {
                     // 左侧即将滑出屏幕左侧
                     if (getScrollX() + rightMovedX >= 0) {
                         //限制左滑最大到屏幕左边
+                        gradualView.setAlpha(1);
                         scrollTo(0, 0);
                     } else {
                         //叠加滑动 ： 负值是往右滑动 ，反之向左
                         scrollBy(rightMovedX, 0);
+                        if (listener != null) {
+                            listener.onDraging();
+                        }
                     }
                 }
                 mLastTouchX = x;
@@ -179,6 +193,28 @@ public class SlideBackLayout extends FrameLayout {
         return dp * (displayMetrics.densityDpi / 160F);
     }
 
+    private static DisplayMetrics getDisplayMetrics(Context context) {
+        return context.getResources().getDisplayMetrics();
+    }
+
+    /**
+     * 获取屏幕高度，不包括NavigationBar
+     *
+     * @return
+     */
+    public static float getScreenHeight(Context context) {
+        return getDisplayMetrics(context).heightPixels;
+    }
+
+    /**
+     * 获取屏幕宽度
+     *
+     * @return
+     */
+    public static float getScreenWidth(Context context) {
+        return getDisplayMetrics(context).widthPixels;
+    }
+
     /**
      * 绘制边缘的阴影
      */
@@ -192,6 +228,16 @@ public class SlideBackLayout extends FrameLayout {
 
     @Override
     public void computeScroll() {
+        //计算移动时，左边灰色渐变View的渐变比值
+        //1、拿取contentOverlay距离屏幕左上角顶点的距离
+        contentOverlay.getLocationInWindow(contentLocation);
+        //2.拿取X轴向的
+        float locationX = contentLocation[0] * 1f;
+        //3、拿取屏幕的宽度
+        //4、用当前距离和总宽度做比值，计算出对应的渐变（offset / sumWidth = ? / 1）
+        //注意：做除法的时候，必须有一方是浮点数，否则整除和整数做除法，结果只会是整数
+        gradualView.setAlpha(Math.abs(1 - (locationX / screenWidth)));
+
         //true说明滚动尚未完成，false说明滚动已经完成
         if (mScroller.computeScrollOffset()) {
             //还没结束，继续滑动
@@ -199,6 +245,7 @@ public class SlideBackLayout extends FrameLayout {
             postInvalidate();//重绘；调用这个：computeScroll()
         } else if (-getScrollX() >= getWidth()) {
             //当滑动出去了，关闭界面
+            gradualView.setAlpha(0);
             if (listener != null) {
                 listener.onSlideClose();
             }
@@ -216,6 +263,8 @@ public class SlideBackLayout extends FrameLayout {
      * 滑动监听
      */
     public interface OnSlideListener {
+        void onDraging();
+
         void onSlideClose();
     }
 
@@ -231,8 +280,15 @@ public class SlideBackLayout extends FrameLayout {
      * @param listener   回调监听
      */
     public void bind(ViewGroup parentView, View target, OnSlideListener listener) {
+        contentOverlay = target;
         setOnSlideListener(listener);
         parentView.removeView(target);
+        this.setOrientation(LinearLayout.HORIZONTAL);
+        gradualView = new View(getContext());//A0000000
+        gradualView.setBackgroundColor(Color.parseColor("#A0000000"));
+        LayoutParams params = new LayoutParams(screenWidth, screenHeight);
+        params.setMargins(-screenWidth, 0, 0, 0);
+        addView(gradualView, params);
         addView(target);
         parentView.addView(this);
     }
@@ -249,6 +305,10 @@ public class SlideBackLayout extends FrameLayout {
         ViewGroup decorView = (ViewGroup) activity.getWindow().getDecorView();
         ViewGroup contentOverlay = (ViewGroup) decorView.getChildAt(0);
         bind(decorView, contentOverlay, new SlideBackLayout.OnSlideListener() {
+            @Override
+            public void onDraging() {
+            }
+
             @Override
             public void onSlideClose() {
                 activity.finish();
