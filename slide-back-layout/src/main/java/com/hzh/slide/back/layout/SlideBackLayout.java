@@ -8,7 +8,9 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Scroller;
@@ -45,23 +47,33 @@ public class SlideBackLayout extends LinearLayout {
     private int screenHeight;
     //Content视图距离屏幕左上角的距离
     private int[] contentLocation = new int[2];
+    private VelocityTracker mVelocityTracker;
+    //快速拽甩关闭的速度值
+    private int FLING_VELOCITY = 3000;
+    private int mMaxVelocity;
+    private int pointerId;
 
     public SlideBackLayout(Context context) {
         super(context);
-        initView(context);
+        init(context);
     }
 
     public SlideBackLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-        initView(context);
+        init(context);
     }
 
     public SlideBackLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initView(context);
+        init(context);
     }
 
-    private void initView(Context context) {
+    /**
+     * 初始化
+     *
+     * @param context
+     */
+    private void init(Context context) {
         //设置允许绘制自己，否则onDraw会跳过不调用
         setWillNotDraw(false);
         mScroller = new Scroller(context);
@@ -70,6 +82,18 @@ public class SlideBackLayout extends LinearLayout {
         //获取屏幕宽高
         screenWidth = (int) getScreenWidth(getContext());
         screenHeight = (int) getScreenHeight(getContext());
+        mVelocityTracker = VelocityTracker.obtain();
+        mMaxVelocity = ViewConfiguration.get(getContext()).getMaximumFlingVelocity();
+        addOnAttachStateChangeListener(new OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+                releaseVelocityTracker();
+            }
+        });
     }
 
     @Override
@@ -106,14 +130,18 @@ public class SlideBackLayout extends LinearLayout {
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent ev) {
-        int x = (int) ev.getX();
-        int y = (int) ev.getY();
-        switch (ev.getAction()) {
+    public boolean onTouchEvent(MotionEvent event) {
+        int x = (int) event.getX();
+        int y = (int) event.getY();
+        mVelocityTracker.addMovement(event);
+
+        switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mTouchDownX = x;
                 mLastTouchX = x;
                 mLastTouchY = y;
+                //拿取一个触摸点的id
+                pointerId = event.getPointerId(0);
                 break;
             case MotionEvent.ACTION_MOVE:
                 int deltaX = x - mLastTouchX;
@@ -122,17 +150,16 @@ public class SlideBackLayout extends LinearLayout {
                     isConsumed = true;
                 }
                 if (isConsumed) {
-                    int rightMovedX = mLastTouchX - (int) ev.getX();
+                    int rightMovedX = mLastTouchX - (int) event.getX();
                     // 左侧即将滑出屏幕左侧
                     if (getScrollX() + rightMovedX >= 0) {
                         //限制左滑最大到屏幕左边
-                        gradualView.setAlpha(1);
                         scrollTo(0, 0);
                     } else {
                         //叠加滑动 ： 负值是往右滑动 ，反之向左
                         scrollBy(rightMovedX, 0);
                         if (listener != null) {
-                            listener.onDraging();
+                            listener.onDrag();
                         }
                     }
                 }
@@ -142,17 +169,36 @@ public class SlideBackLayout extends LinearLayout {
             case MotionEvent.ACTION_UP:
                 isConsumed = false;
                 mTouchDownX = mLastTouchX = mLastTouchY = 0;
-                // 根据手指释放时的位置决定回弹还是关闭
-                if (-getScrollX() < getWidth() / 3) {
-                    //向右滑动小于屏幕3分之一，回弹到屏幕左侧
-                    scrollBackToLeft();
-                } else {
-                    //否则，向右滑动
+                //计算速度
+                mVelocityTracker.computeCurrentVelocity(1000, mMaxVelocity);
+                final float velocityX = mVelocityTracker.getXVelocity(pointerId);
+                //如果达到可以惯性拽托的速度值，则关闭界面
+                if (velocityX >= FLING_VELOCITY) {
                     scrollClose();
+                } else {
+                    // 根据手指释放时的位置决定回弹还是关闭
+                    if (-getScrollX() < getWidth() / 3) {
+                        //向右滑动小于屏幕3分之一，回弹到屏幕左侧
+                        scrollBackToLeft();
+                    } else {
+                        //否则，向右滑动
+                        scrollClose();
+                    }
                 }
                 break;
         }
         return true;
+    }
+
+    /**
+     * 回收速度检测器
+     */
+    private void releaseVelocityTracker() {
+        if (null != mVelocityTracker) {
+            mVelocityTracker.clear();
+            mVelocityTracker.recycle();
+            mVelocityTracker = null;
+        }
     }
 
     /**
@@ -247,7 +293,7 @@ public class SlideBackLayout extends LinearLayout {
             //当滑动出去了，关闭界面
             gradualView.setAlpha(0);
             if (listener != null) {
-                listener.onSlideClose();
+                listener.onScrollToClose();
             }
         }
     }
@@ -263,9 +309,15 @@ public class SlideBackLayout extends LinearLayout {
      * 滑动监听
      */
     public interface OnSlideListener {
-        void onDraging();
+        /**
+         * 在拖动
+         */
+        void onDrag();
 
-        void onSlideClose();
+        /**
+         * 滑动到关闭
+         */
+        void onScrollToClose();
     }
 
     public void setOnSlideListener(OnSlideListener listener) {
@@ -306,11 +358,11 @@ public class SlideBackLayout extends LinearLayout {
         ViewGroup contentOverlay = (ViewGroup) decorView.getChildAt(0);
         bind(decorView, contentOverlay, new SlideBackLayout.OnSlideListener() {
             @Override
-            public void onDraging() {
+            public void onDrag() {
             }
 
             @Override
-            public void onSlideClose() {
+            public void onScrollToClose() {
                 activity.finish();
             }
         });
