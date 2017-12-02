@@ -49,7 +49,7 @@ public class SlideBackLayout extends LinearLayout {
     private int[] contentLocation = new int[2];
     private VelocityTracker mVelocityTracker;
     //快速拽甩关闭的速度值
-    private int FLING_VELOCITY = 3000;
+    private static final int FLING_VELOCITY = 3500;
     private int mMaxVelocity;
     private int pointerId;
 
@@ -126,6 +126,11 @@ public class SlideBackLayout extends LinearLayout {
                 mInterceptDownX = mLastInterceptX = mLastInterceptY = 0;
                 break;
         }
+        if (isIntercept) {
+            if (listener != null) {
+                listener.onEdgeTouch();
+            }
+        }
         return isIntercept;
     }
 
@@ -134,7 +139,6 @@ public class SlideBackLayout extends LinearLayout {
         int x = (int) event.getX();
         int y = (int) event.getY();
         mVelocityTracker.addMovement(event);
-
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mTouchDownX = x;
@@ -159,7 +163,7 @@ public class SlideBackLayout extends LinearLayout {
                         //叠加滑动 ： 负值是往右滑动 ，反之向左
                         scrollBy(rightMovedX, 0);
                         if (listener != null) {
-                            listener.onDrag();
+                            listener.onDragging();
                         }
                     }
                 }
@@ -172,9 +176,14 @@ public class SlideBackLayout extends LinearLayout {
                 //计算速度
                 mVelocityTracker.computeCurrentVelocity(1000, mMaxVelocity);
                 final float velocityX = mVelocityTracker.getXVelocity(pointerId);
-                //如果达到可以惯性拽托的速度值，则关闭界面
+                //如果达到可以惯性拽托的速度值
                 if (velocityX >= FLING_VELOCITY) {
-                    scrollClose();
+                    //并且是从边缘触发的，则关闭界面
+                    int distanceX = x - mLastInterceptX;
+                    int distanceY = y - mLastInterceptY;
+                    if (mInterceptDownX < (getWidth() / 10) && Math.abs(distanceX) > Math.abs(distanceY)) {
+                        scrollClose();
+                    }
                 } else {
                     // 根据手指释放时的位置决定回弹还是关闭
                     if (-getScrollX() < getWidth() / 3) {
@@ -310,9 +319,14 @@ public class SlideBackLayout extends LinearLayout {
      */
     public interface OnSlideListener {
         /**
-         * 在拖动
+         * 在边缘拽托
          */
-        void onDrag();
+        void onEdgeTouch();
+
+        /**
+         * 在拖动中
+         */
+        void onDragging();
 
         /**
          * 滑动到关闭
@@ -336,7 +350,7 @@ public class SlideBackLayout extends LinearLayout {
         setOnSlideListener(listener);
         parentView.removeView(target);
         this.setOrientation(LinearLayout.HORIZONTAL);
-        gradualView = new View(getContext());//A0000000
+        gradualView = new View(getContext());
         gradualView.setBackgroundColor(Color.parseColor("#A0000000"));
         LayoutParams params = new LayoutParams(screenWidth, screenHeight);
         params.setMargins(-screenWidth, 0, 0, 0);
@@ -358,7 +372,11 @@ public class SlideBackLayout extends LinearLayout {
         ViewGroup contentOverlay = (ViewGroup) decorView.getChildAt(0);
         bind(decorView, contentOverlay, new SlideBackLayout.OnSlideListener() {
             @Override
-            public void onDrag() {
+            public void onEdgeTouch() {
+            }
+
+            @Override
+            public void onDragging() {
             }
 
             @Override
