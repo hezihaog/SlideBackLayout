@@ -28,4 +28,4 @@ layout.bind(this);
 
   3. gradle使用
 
-  - compile 'com.hzh:slide-back-layout:1.0.2'
+  - compile 'com.hzh:slide-back-layout:1.0.3'
