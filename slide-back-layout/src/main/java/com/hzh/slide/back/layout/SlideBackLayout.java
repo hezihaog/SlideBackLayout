@@ -83,17 +83,7 @@ public class SlideBackLayout extends LinearLayout {
         screenWidth = (int) getScreenWidth(getContext());
         screenHeight = (int) getScreenHeight(getContext());
         mVelocityTracker = VelocityTracker.obtain();
-        mMaxVelocity = ViewConfiguration.get(getContext()).getMaximumFlingVelocity();
-        addOnAttachStateChangeListener(new OnAttachStateChangeListener() {
-            @Override
-            public void onViewAttachedToWindow(View v) {
-            }
-
-            @Override
-            public void onViewDetachedFromWindow(View v) {
-                releaseVelocityTracker();
-            }
-        });
+        mMaxVelocity = ViewConfiguration.getMaximumFlingVelocity();
     }
 
     @Override
@@ -197,6 +187,12 @@ public class SlideBackLayout extends LinearLayout {
                 break;
         }
         return true;
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        releaseVelocityTracker();
     }
 
     /**
