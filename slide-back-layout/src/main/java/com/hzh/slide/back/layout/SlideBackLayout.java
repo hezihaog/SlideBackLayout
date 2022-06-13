@@ -2,6 +2,7 @@ package com.hzh.slide.back.layout;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -39,6 +40,15 @@ public class SlideBackLayout extends LinearLayout {
     private static final int SHADOW_END_COLOR = Color.parseColor("#50000000");
 
     /**
+     * 屏幕宽度
+     */
+    private final int screenWidth = getScreenWidth();
+    /**
+     * 屏幕高度
+     */
+    private final int screenHeight = getScreenHeight();
+
+    /**
      * 视图滚动类
      */
     private Scroller mScroller;
@@ -60,9 +70,10 @@ public class SlideBackLayout extends LinearLayout {
     private boolean isConsumed = false;
     private OnSlideListener listener;
     private View gradualView;
+    /**
+     * 内容视图
+     */
     private View contentOverlay;
-    private int screenWidth;
-    private int screenHeight;
     /**
      * Content视图距离屏幕左上角的距离
      */
@@ -98,12 +109,8 @@ public class SlideBackLayout extends LinearLayout {
         setWillNotDraw(false);
         mScroller = new Scroller(context);
         //阴影
-        //mLeftShadow = getResources().getDrawable(R.drawable.left_shadow);
         mLeftShadow = getLeftShadowDrawable();
-        mShadowWidth = (int) dpToPixel(context, SHADOW_WIDTH_DP);
-        //获取屏幕宽高
-        screenWidth = (int) getScreenWidth(getContext());
-        screenHeight = (int) getScreenHeight(getContext());
+        mShadowWidth = (int) dpToPixel(SHADOW_WIDTH_DP);
         //速度监测
         mVelocityTracker = VelocityTracker.obtain();
         mMaxVelocity = ViewConfiguration.getMaximumFlingVelocity();
@@ -136,7 +143,7 @@ public class SlideBackLayout extends LinearLayout {
             case MotionEvent.ACTION_MOVE:
                 int deltaX = x - mLastInterceptX;
                 int deltaY = y - mLastInterceptY;
-                // 手指处于屏幕边缘，且横向滑动距离大于纵向滑动距离时，拦截事件
+                //手指处于屏幕边缘，且横向滑动距离大于纵向滑动距离时，拦截事件
                 //屏幕的十分之一的距离；
                 isIntercept = mInterceptDownX < (getWidth() / 10) && Math.abs(deltaX) > Math.abs(deltaY);
                 mLastInterceptX = x;
@@ -180,7 +187,7 @@ public class SlideBackLayout extends LinearLayout {
                 }
                 if (isConsumed) {
                     int rightMovedX = mLastTouchX - (int) event.getX();
-                    // 左侧即将滑出屏幕左侧
+                    //左侧即将滑出屏幕左侧
                     if (getScrollX() + rightMovedX >= 0) {
                         //限制左滑最大到屏幕左边
                         scrollTo(0, 0);
@@ -210,7 +217,7 @@ public class SlideBackLayout extends LinearLayout {
                         scrollClose();
                     }
                 } else {
-                    // 根据手指释放时的位置决定回弹还是关闭
+                    //根据手指释放时的位置决定回弹还是关闭
                     if (-getScrollX() < getWidth() / 3) {
                         //向右滑动小于屏幕3分之一，回弹到屏幕左侧
                         scrollBackToLeft();
@@ -273,27 +280,23 @@ public class SlideBackLayout extends LinearLayout {
      * @param dp dp值
      * @return 转换后的px值
      */
-    public static float dpToPixel(Context context, float dp) {
-        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+    public static float dpToPixel(float dp) {
+        DisplayMetrics displayMetrics = Resources.getSystem().getDisplayMetrics();
         return dp * (displayMetrics.densityDpi / 160F);
-    }
-
-    private static DisplayMetrics getDisplayMetrics(Context context) {
-        return context.getResources().getDisplayMetrics();
     }
 
     /**
      * 获取屏幕高度，不包括NavigationBar
      */
-    public static float getScreenHeight(Context context) {
-        return getDisplayMetrics(context).heightPixels;
+    public static int getScreenHeight() {
+        return Resources.getSystem().getDisplayMetrics().heightPixels;
     }
 
     /**
      * 获取屏幕宽度
      */
-    public static float getScreenWidth(Context context) {
-        return getDisplayMetrics(context).widthPixels;
+    public static int getScreenWidth() {
+        return Resources.getSystem().getDisplayMetrics().widthPixels;
     }
 
     /**
