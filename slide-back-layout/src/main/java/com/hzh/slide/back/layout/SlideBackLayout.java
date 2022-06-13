@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
@@ -25,9 +26,21 @@ import android.widget.Scroller;
  */
 public class SlideBackLayout extends LinearLayout {
     /**
-     * 页面边缘阴影的宽度默认值
+     * 页面左边缘阴影的宽度默认值
      */
-    private static final int SHADOW_WIDTH_DP = 16;//左边阴影的宽
+    private static final int SHADOW_WIDTH_DP = 16;
+    /**
+     * 阴影的开始颜色
+     */
+    private static final int SHADOW_START_COLOR = Color.parseColor("#00000000");
+    /**
+     * 阴影的结束颜色
+     */
+    private static final int SHADOW_END_COLOR = Color.parseColor("#50000000");
+
+    /**
+     * 视图滚动类
+     */
     private Scroller mScroller;
     /**
      * 页面边缘的阴影图
@@ -84,13 +97,28 @@ public class SlideBackLayout extends LinearLayout {
         //设置允许绘制自己，否则onDraw会跳过不调用
         setWillNotDraw(false);
         mScroller = new Scroller(context);
-        mLeftShadow = getResources().getDrawable(R.drawable.left_shadow);
+        //阴影
+        //mLeftShadow = getResources().getDrawable(R.drawable.left_shadow);
+        mLeftShadow = getLeftShadowDrawable();
         mShadowWidth = (int) dpToPixel(context, SHADOW_WIDTH_DP);
         //获取屏幕宽高
         screenWidth = (int) getScreenWidth(getContext());
         screenHeight = (int) getScreenHeight(getContext());
+        //速度监测
         mVelocityTracker = VelocityTracker.obtain();
         mMaxVelocity = ViewConfiguration.getMaximumFlingVelocity();
+    }
+
+    /**
+     * 获取左边的阴影Drawable
+     */
+    private Drawable getLeftShadowDrawable() {
+        GradientDrawable drawable = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{SHADOW_START_COLOR, SHADOW_END_COLOR}
+        );
+        drawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        return drawable;
     }
 
     @Override
