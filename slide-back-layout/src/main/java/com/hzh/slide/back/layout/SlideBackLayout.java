@@ -23,14 +23,19 @@ import android.widget.Scroller;
  * Descirbe:
  * Email: hezihao@linghit.com
  */
-
 public class SlideBackLayout extends LinearLayout {
-    // 页面边缘阴影的宽度默认值
+    /**
+     * 页面边缘阴影的宽度默认值
+     */
     private static final int SHADOW_WIDTH_DP = 16;//左边阴影的宽
     private Scroller mScroller;
-    // 页面边缘的阴影图
+    /**
+     * 页面边缘的阴影图
+     */
     private Drawable mLeftShadow;
-    // 页面边缘阴影的宽度
+    /**
+     * 页面边缘阴影的宽度
+     */
     private int mShadowWidth;
     private int mInterceptDownX;
     private int mLastInterceptX;
@@ -45,10 +50,14 @@ public class SlideBackLayout extends LinearLayout {
     private View contentOverlay;
     private int screenWidth;
     private int screenHeight;
-    //Content视图距离屏幕左上角的距离
-    private int[] contentLocation = new int[2];
+    /**
+     * Content视图距离屏幕左上角的距离
+     */
+    private final int[] contentLocation = new int[2];
     private VelocityTracker mVelocityTracker;
-    //快速拽甩关闭的速度值
+    /**
+     * 快速拽甩关闭的速度值
+     */
     private static final int FLING_VELOCITY = 3500;
     private int mMaxVelocity;
     private int pointerId;
@@ -70,8 +79,6 @@ public class SlideBackLayout extends LinearLayout {
 
     /**
      * 初始化
-     *
-     * @param context
      */
     private void init(Context context) {
         //设置允许绘制自己，否则onDraw会跳过不调用
@@ -88,7 +95,7 @@ public class SlideBackLayout extends LinearLayout {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        boolean isIntercept = false;
+        boolean isIntercept;
         int x = (int) ev.getX();
         int y = (int) ev.getY();
         switch (ev.getAction()) {
@@ -103,17 +110,17 @@ public class SlideBackLayout extends LinearLayout {
                 int deltaY = y - mLastInterceptY;
                 // 手指处于屏幕边缘，且横向滑动距离大于纵向滑动距离时，拦截事件
                 //屏幕的十分之一的距离；
-                if (mInterceptDownX < (getWidth() / 10) && Math.abs(deltaX) > Math.abs(deltaY)) {
-                    isIntercept = true;
-                } else {
-                    isIntercept = false;
-                }
+                isIntercept = mInterceptDownX < (getWidth() / 10) && Math.abs(deltaX) > Math.abs(deltaY);
                 mLastInterceptX = x;
                 mLastInterceptY = y;
                 break;
             case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
                 isIntercept = false;
                 mInterceptDownX = mLastInterceptX = mLastInterceptY = 0;
+                break;
+            default:
+                isIntercept = false;
                 break;
         }
         if (isIntercept) {
@@ -212,14 +219,13 @@ public class SlideBackLayout extends LinearLayout {
     private void scrollBackToLeft() {
         int startX = getScrollX();
         int dx = -getScrollX();
-        /**
-         * startX 水平方向滚动的偏移值，以像素为单位。
-         *　　startY 垂直方向滚动的偏移值，以像素为单位。
-         *　　dx 水平方向滑动的距离，正值会使滚动向左滚动
-         *　　dy 垂直方向滑动的距离，正值会使滚动向上滚动
-         *   duration: 滑动所需要的时间；
-         */
-        mScroller.startScroll(startX, 0, dx, 0, 300);//实现弹性的滑动
+        //实现弹性的滑动
+        //startX 水平方向滚动的偏移值，以像素为单位。
+        //startY 垂直方向滚动的偏移值，以像素为单位。
+        //dx 水平方向滑动的距离，正值会使滚动向左滚动
+        //dy 垂直方向滑动的距离，正值会使滚动向上滚动
+        //duration: 滑动所需要的时间
+        mScroller.startScroll(startX, 0, dx, 0, 300);
         invalidate();//重新绘制：这样才会调用 computeScroll()；
     }
 
@@ -250,8 +256,6 @@ public class SlideBackLayout extends LinearLayout {
 
     /**
      * 获取屏幕高度，不包括NavigationBar
-     *
-     * @return
      */
     public static float getScreenHeight(Context context) {
         return getDisplayMetrics(context).heightPixels;
@@ -259,8 +263,6 @@ public class SlideBackLayout extends LinearLayout {
 
     /**
      * 获取屏幕宽度
-     *
-     * @return
      */
     public static float getScreenWidth(Context context) {
         return getDisplayMetrics(context).widthPixels;
@@ -288,12 +290,12 @@ public class SlideBackLayout extends LinearLayout {
         //4、用当前距离和总宽度做比值，计算出对应的渐变（offset / sumWidth = ? / 1）
         //注意：做除法的时候，必须有一方是浮点数，否则整除和整数做除法，结果只会是整数
         gradualView.setAlpha(Math.abs(1 - (locationX / screenWidth)));
-
         //true说明滚动尚未完成，false说明滚动已经完成
         if (mScroller.computeScrollOffset()) {
             //还没结束，继续滑动
             scrollTo(mScroller.getCurrX(), 0);
-            postInvalidate();//重绘；调用这个：computeScroll()
+            //重绘；调用这个：computeScroll()
+            postInvalidate();
         } else if (-getScrollX() >= getWidth()) {
             //当滑动出去了，关闭界面
             gradualView.setAlpha(0);
@@ -357,8 +359,6 @@ public class SlideBackLayout extends LinearLayout {
 
     /**
      * 快捷使用Activity绑定
-     *
-     * @param activity
      */
     public void bind(final Activity activity) {
         if (activity == null) {
