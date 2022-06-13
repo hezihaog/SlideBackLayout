@@ -18,12 +18,12 @@ layout.bind(this);
   ```java
   //在布局的最外层使用SlideBackLayout，找到控件后调用setOnSlideListener()设置监听，在回调上做操作
   SlideBackLayout layout = findViewById(R.id.slideLayout);
-          layout.setOnSlideListener(new SlideBackLayout.OnSlideListener() {
-              @Override
-              public void onSlideClose() {
-                  finish();
-              }
-          });
+  layout.setOnSlideListener(new SlideBackLayout.OnSlideListener() {
+      @Override
+      public void onSlideClose() {
+          finish();
+      }
+  });
   ```
 
   3. gradle使用
