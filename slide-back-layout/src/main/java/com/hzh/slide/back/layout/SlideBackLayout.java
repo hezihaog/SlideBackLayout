@@ -152,7 +152,9 @@ public class SlideBackLayout extends LinearLayout {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 isIntercept = false;
-                mInterceptDownX = mLastInterceptX = mLastInterceptY = 0;
+                mInterceptDownX = 0;
+                mLastInterceptX = 0;
+                mLastInterceptY = 0;
                 break;
             default:
                 isIntercept = false;
